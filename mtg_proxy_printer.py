@@ -13,7 +13,11 @@ import sys, math, os, re, urllib, codecs
 
 from reportlab.pdfgen.canvas import Canvas
 from reportlab.lib.units import mm
-import settings_default as settings
+try:
+	import settings
+except ImportError:
+	print 'You can modify settings by putting your definitions to settings.py file - just copy settings_default.py to settings.py and edit content'
+	import settings_default as settings
 
 def mtg_proxy_print(input_filename):
     input_fullpath = os.path.join(settings.DECKS_FULL_PATH, input_filename)
