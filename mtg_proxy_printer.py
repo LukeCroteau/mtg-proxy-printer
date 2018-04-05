@@ -65,11 +65,11 @@ def download_image(card_name, images_full_path):
     content = search_for_card(card_name)
     if not content:
         return False
-    match = re.match('(.+)src="http://([a-z0-9\./]+)"\s+alt="%s"(.+)' % (card_name), content.replace("\n", ""))
+    match = re.match('(.+)src="/([a-z0-9\./]+)"\s+alt="%s"(.+)' % (card_name), content.replace("\n", ""))
     if match is None:
         print 'Image for %s not found.' % card_name
         return False
-    img_url = 'http://%s' % match.group(2)
+    img_url = 'http://magiccards.info/%s' % match.group(2)
     new_url = get_image_full_path(card_name, images_full_path)
     urllib.urlretrieve(img_url, new_url.replace("'",""))
     if not os.path.exists(new_url):
