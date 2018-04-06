@@ -16,13 +16,13 @@ from reportlab.lib.units import mm
 try:
 	import settings
 except ImportError:
-	print 'You can modify settings by putting your definitions to settings.py file - just copy settings_default.py to settings.py and edit content'
+	print('You can modify settings by putting your definitions to settings.py file - just copy settings_default.py to settings.py and edit content')
 	import settings_default as settings
 
 def mtg_proxy_print(input_filename):
     input_fullpath = os.path.join(settings.DECKS_FULL_PATH, input_filename)
     if not os.path.exists(input_fullpath):
-        raise Exception, 'File with the name "%s" doesn\'t exist.' % input_fullpath
+        raise Exception('File with the name "%s" doesn\'t exist.' % input_fullpath)
     
     deck = read_deck(input_fullpath)
     download_missing_images(deck, settings.IMAGES_FULL_PATH)
@@ -34,7 +34,7 @@ def read_deck(input_fullpath):
     deck = []
     for line in f:
         #remove BOM if present and strip
-        line = line.lstrip(unicode(codecs.BOM_UTF8, "utf8" )).strip()
+        line = line.lstrip().strip()
         match = re.match('(\d+) ([ \S]+)', line)
         if match is None:
             continue
@@ -48,16 +48,16 @@ def get_image_full_path(card_name, images_full_path):
     return os.path.join(images_full_path, '%s.jpg' % card_name.replace("'",""))
 
 def search_for_card(card_name):
-    query_url = 'http://magiccards.info/query?q=%s' % (urllib.quote(card_name))
-    print query_url
-    page = urllib.urlopen(query_url)
-    content = unicode(page.read(), "utf-8")
+    query_url = 'http://magiccards.info/query?q=%s' % (urllib.parse.quote(card_name))
+    print(query_url)
+    page = urllib.request.urlopen(query_url)
+    content = page.read().decode('utf-8')
     page.close()
     search = u'<title>%s' % card_name
     if content.find(search) is -1:
         search = u'<title>%s' % card_name.replace("'","&#39;")
         if content.find(search) is -1:
-          print 'Page title %s not found on %s' % (card_name, query_url)
+          print('Page title %s not found on %s' % (card_name, query_url))
           return False
     return content
 
@@ -67,15 +67,15 @@ def download_image(card_name, images_full_path):
         return False
     match = re.match('(.+)src="/([a-z0-9\./]+)"\s+alt="%s"(.+)' % (card_name), content.replace("\n", ""))
     if match is None:
-        print 'Image for %s not found.' % card_name
+        print('Image for %s not found.' % card_name)
         return False
     img_url = 'http://magiccards.info/%s' % match.group(2)
     new_url = get_image_full_path(card_name, images_full_path)
-    urllib.urlretrieve(img_url, new_url.replace("'",""))
+    urllib.request.urlretrieve(img_url, new_url.replace("'",""))
     if not os.path.exists(new_url):
-        print 'WARNING: download of %s from %s not successful!' % (new_url, img_url)
+        print('WARNING: download of %s from %s not successful!' % (new_url, img_url))
         return False
-    print 'Downloaded image from %s to %s' % (img_url, new_url)
+    print('Downloaded image from %s to %s' % (img_url, new_url))
 
 
 def download_missing_images(deck, images_full_path):
@@ -127,10 +127,10 @@ def print_pdf(deck, input_filename):
     try:
         canvas.save()
     except IOError:
-        print 'Save of the file %s failed. If you have the PDF file opened, close it.' % output_filename
+        print('Save of the file %s failed. If you have the PDF file opened, close it.' % output_filename)
         sys.exit(1)
 
-    print '%s saved.' % output_filename
+    print('%s saved.' % output_filename)
     
     #sheet for pack quick overview
     
@@ -141,7 +141,11 @@ def print_pdf(deck, input_filename):
 
     #making list unique but maintain the order
     cards = list(set(deck))
-    cards.sort(cmp=lambda x,y: cmp(deck.index(x), deck.index(y))) 
+    #cards.sort(cmp=lambda x,y: cmp(deck.index(x), deck.index(y))) 
+    outset = []
+    for card in cards:
+        if card not in outset:
+            outset.append(card)
     
     multiplicator = int(math.ceil(math.sqrt(len(cards))))
     
@@ -149,7 +153,7 @@ def print_pdf(deck, input_filename):
     CARD_HEIGHT = 3.0 * CARD_HEIGHT / multiplicator
     
     x, y = 0, multiplicator
-    for card_name in cards:
+    for card_name in outset:
         image = get_image_full_path(card_name, settings.IMAGES_FULL_PATH)
         if x % multiplicator == 0:
             y -= 1
@@ -177,8 +181,8 @@ def print_pdf(deck, input_filename):
     try:
         canvas.save()
     except IOError:
-        print 'Save of the file %s failed. If you have the PDF file opened, close it.' % output_filename
+        print('Save of the file %s failed. If you have the PDF file opened, close it.' % output_filename)
         sys.exit(1)
 
-    print '%s saved.' % output_filename
+    print('%s saved.' % output_filename)
 
