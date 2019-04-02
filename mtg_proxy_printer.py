@@ -11,6 +11,8 @@ Write decks in UTF-8 to manage cards like Æther Vial
 
 import sys, math, os, re, urllib, codecs
 
+import scrython
+
 from reportlab.pdfgen.canvas import Canvas
 from reportlab.lib.units import mm
 try:
@@ -48,35 +50,21 @@ def get_image_full_path(card_name, images_full_path):
     return os.path.join(images_full_path, '%s.jpg' % card_name.replace("'",""))
 
 def search_for_card(card_name):
-    query_url = 'http://magiccards.info/query?q=%s' % (urllib.parse.quote(card_name))
-    print(query_url)
-    page = urllib.request.urlopen(query_url)
-    content = page.read().decode('utf-8')
-    page.close()
-    search = u'<title>%s' % card_name
-    if content.find(search) is -1:
-        search = u'<title>%s' % card_name.replace("'","&#39;")
-        if content.find(search) is -1:
-          print('Page title %s not found on %s' % (card_name, query_url))
-          return False
-    return content
+    card = scrython.cards.Named(fuzzy=card_name)
+    return card
 
 def download_image(card_name, images_full_path):
     content = search_for_card(card_name)
     if not content:
         return False
-    match = re.match('(.+)src="/([a-z0-9\./]+)"\s+alt="%s"(.+)' % (card_name), content.replace("\n", ""))
-    if match is None:
-        print('Image for %s not found.' % card_name)
-        return False
-    img_url = 'http://magiccards.info/%s' % match.group(2)
+
+    img_url = content.image_uris(image_type='large')
     new_url = get_image_full_path(card_name, images_full_path)
     urllib.request.urlretrieve(img_url, new_url.replace("'",""))
     if not os.path.exists(new_url):
         print('WARNING: download of %s from %s not successful!' % (new_url, img_url))
         return False
     print('Downloaded image from %s to %s' % (img_url, new_url))
-
 
 def download_missing_images(deck, images_full_path):
     #download missing images
